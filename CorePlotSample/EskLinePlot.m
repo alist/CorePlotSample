@@ -23,15 +23,15 @@
     if (self) 
     {
         // setting up the sample data here.
-        sampleData = [[NSArray alloc] initWithObjects:[NSNumber numberWithInt:6000],
-                                                      [NSNumber numberWithInt:3000],
-                                                      [NSNumber numberWithInt:2000],
-                                                      [NSNumber numberWithInt:5000],
-                                                      [NSNumber numberWithInt:7000],
-                                                      [NSNumber numberWithInt:8500],
-                                                      [NSNumber numberWithInt:6500], nil];
+        sampleData = [[NSArray alloc] initWithObjects:[NSNumber numberWithInt:24],
+                                                      [NSNumber numberWithInt:20],
+                                                      [NSNumber numberWithInt:15],
+                                                      [NSNumber numberWithInt:19],
+                                                      [NSNumber numberWithInt:13],
+                                                      [NSNumber numberWithInt:10],
+                                                      [NSNumber numberWithInt:3], nil];
         
-        sampleYears = [[NSArray alloc] initWithObjects:@"2010", @"2011", @"2012", @"2013", @"2014", @"2015", @"2016", nil];
+        sampleYears = [[NSArray alloc] initWithObjects:@"7", @"6", @"5", @"4", @"3", @"2", @"1", nil];
         
     }
     
@@ -82,8 +82,9 @@
     CPTXYPlotSpace *plotSpace = (CPTXYPlotSpace *)graph.defaultPlotSpace;
     plotSpace.allowsUserInteraction = YES;
     plotSpace.delegate = self;
-    plotSpace.xRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0f) length:CPTDecimalFromFloat(6.0f)];
-    plotSpace.yRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0f) length:CPTDecimalFromFloat(10000)];
+    plotSpace.xRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(-0.1f) length:CPTDecimalFromFloat(6.2f)];//a bit more on right than needed
+    plotSpace.yRange = [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0f) length:CPTDecimalFromFloat(30.0f)];
+
     
     // Setup grid line style
     CPTMutableLineStyle *majorXGridLineStyle = [CPTMutableLineStyle lineStyle];
@@ -99,7 +100,7 @@
     x.minorTicksPerInterval = 1;
 
     x.orthogonalCoordinateDecimal = CPTDecimalFromString(@"0");
-    x.title = @"Years";
+    x.title = @"scores by weeks ago";
     x.timeOffset = 30.0f;
  	NSArray *exclusionRanges = [NSArray arrayWithObjects:[CPTPlotRange plotRangeWithLocation:CPTDecimalFromInt(0) length:CPTDecimalFromInt(0)], nil];
 	x.labelExclusionRanges = exclusionRanges;
@@ -128,10 +129,10 @@
     
     CPTXYAxis *y = axisSet.yAxis;
     y.majorGridLineStyle = majorYGridLineStyle;
-    y.majorIntervalLength = CPTDecimalFromString(@"1000");
+    y.majorIntervalLength = CPTDecimalFromString(@"5");
     y.minorTicksPerInterval = 1;
     y.orthogonalCoordinateDecimal = CPTDecimalFromString(@"0");
-    y.title = @"Consumer Spending";
+    y.title = nil;// @"Consumer Spending";
     NSArray *yExlusionRanges = [NSArray arrayWithObjects:
                                 [CPTPlotRange plotRangeWithLocation:CPTDecimalFromFloat(0.0) length:CPTDecimalFromFloat(0.0)],
                                 nil];
@@ -141,13 +142,34 @@
 	CPTScatterPlot *highPlot = [[[CPTScatterPlot alloc] init] autorelease];
     highPlot.identifier = kHighPlot;
     
+	BOOL greyMode = FALSE;
+
     CPTMutableLineStyle *highLineStyle = [[highPlot.dataLineStyle mutableCopy] autorelease];
 	highLineStyle.lineWidth = 2.f;
-    highLineStyle.lineColor = [CPTColor colorWithComponentRed:0.50f green:0.67f blue:0.65f alpha:1.0f];
+	if (greyMode){
+		highLineStyle.lineColor = [CPTColor colorWithCGColor:[[UIColor colorWithWhite:.4 alpha:.1] CGColor]];
+	}else{
+		highLineStyle.lineColor = [CPTColor colorWithComponentRed:0.50f green:0.67f blue:0.65f alpha:1.0f];
+	}
     highPlot.dataLineStyle = highLineStyle;
     highPlot.dataSource = self;
+	highPlot.delegate = self;
+	highPlot.plotSymbolMarginForHitDetection = 15.0f;
+	CPTPlotSymbol *plotSymbol = [CPTPlotSymbol ellipsePlotSymbol];
+    plotSymbol.fill               = [CPTFill fillWithColor:[CPTColor colorWithCGColor:[[UIColor colorWithWhite:.9 alpha:1] CGColor]]];
+    plotSymbol.size               = CGSizeMake(4.0, 4.0);
+    highPlot.plotSymbol = plotSymbol;
 	
-    CPTFill *areaFill = [CPTFill fillWithColor:[CPTColor colorWithComponentRed:0.50f green:0.67f blue:0.65f alpha:0.4f]];
+	
+	
+    CPTFill *areaFill = nil;
+	
+	if (greyMode){
+		areaFill = 	[CPTFill fillWithColor:[CPTColor colorWithCGColor:[[UIColor colorWithWhite:.4 alpha:.4] CGColor]]];
+	}else{
+		areaFill = [CPTFill fillWithColor:[CPTColor colorWithComponentRed:0.50f green:0.67f blue:0.65f alpha:0.4f]];
+	}
+	
     highPlot.areaFill = areaFill;
     highPlot.areaBaseValue = CPTDecimalFromString(@"0");
     [graph addPlot:highPlot];
@@ -156,12 +178,14 @@
     // Create the Savings Marker Plot
     selectedCoordination = 2;
     
-    touchPlot = [[[CPTScatterPlot alloc] initWithFrame:CGRectNull] autorelease];
-    touchPlot.identifier = kLinePlot;
-    touchPlot.dataSource = self;
-    touchPlot.delegate = self;
-    [self applyTouchPlotColor];
-    [graph addPlot:touchPlot];
+//    touchPlot = [[[CPTScatterPlot alloc] initWithFrame:CGRectNull] autorelease];
+//    touchPlot.identifier = kLinePlot;
+//    touchPlot.dataSource = self;
+//    touchPlot.delegate = self;
+//    [self applyTouchPlotColor];
+//    [graph addPlot:touchPlot];
+	
+	
     
     [pool drain];
 
@@ -285,7 +309,10 @@
         [self applyHighLightPlotColor:plot];
         if ([delegate respondsToSelector:@selector(linePlot:indexLocation:)])
             [delegate linePlot:self indexLocation:index];
-    } 
+    } else if ([(NSString *)plot.identifier isEqualToString:kHighPlot]){
+		if ([delegate respondsToSelector:@selector(linePlot:indexLocation:)])
+            [delegate linePlot:self indexLocation:index];
+	}
 }
 
 

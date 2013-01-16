@@ -103,7 +103,7 @@
     y.titleOffset = 58.0f;
     
     NSNumberFormatter *currencyFormatter = [[NSNumberFormatter alloc] init];
-    [currencyFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+    [currencyFormatter setNumberStyle:NSNumberFormatterDecimalStyle];
     [currencyFormatter setGroupingSeparator:@","];
     [currencyFormatter setGroupingSize:3];
     [currencyFormatter setMaximumFractionDigits:0];
